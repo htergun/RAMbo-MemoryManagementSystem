@@ -1,4 +1,4 @@
-# RAMbo – Memory Management System
+# RAMbo – Memory Management Simulator
 
 **COME 361 – Operating Systems | Term Project (Chapter 9: Main Memory / Virtual Memory)**
 
@@ -199,12 +199,12 @@ Console.WriteLine($"Internal: {partition.InternalFragmentation}, External: {part
 
 | Module | Owner |
 |--------|-------|
-| FIFO algorithm | _TODO: name_ |
-| LRU algorithm | _TODO: name_ |
-| Optimal algorithm + comparison report | _TODO: name_ |
-| Memory partitioning (First / Best / Worst Fit) | _TODO: name_ |
-| SQL integration (Week 8) | _TODO: name_ |
-| UI (Week 9) | _TODO: name_ |
+| FIFO algorithm | Özgürcan Akgül |
+| LRU algorithm | Mustafa Devran Karaca |
+| Optimal algorithm + comparison report | Taha Akıncan |
+| Memory partitioning (First / Best / Worst Fit) | Haydar Talha Ergün |
+| SQL integration (Week 8) | Not yet |
+| UI (Week 9) | Not yet |
 
 ---
 
