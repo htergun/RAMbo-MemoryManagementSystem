@@ -1,4 +1,4 @@
-# RAMbo – Memory Management Simulator
+# RAMbo – Memory Management System
 
 **COME 361 – Operating Systems | Term Project (Chapter 9: Main Memory / Virtual Memory)**
 
