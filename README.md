@@ -1,232 +1,115 @@
 # RAMbo – Memory Management System
 
-**COME 361 – Operating Systems | Term Project (Chapter 9: Main Memory / Virtual Memory)**
+**RAMbo is a learning and analysis tool that shows how an operating system manages RAM.**
 
-RAMbo is a .NET console application that simulates two core operating-system memory-management mechanisms and stores the simulation results in a SQL Server database:
-
-- **Page replacement:** FIFO, LRU, Optimal
-- **Memory partitioning:** First Fit, Best Fit, Worst Fit (fixed and variable partitioning) with internal / external fragmentation calculation
+Memory management normally happens invisibly inside the OS kernel, which makes it hard to understand, test or compare. RAMbo makes it visible: you give it a workload, pick an algorithm, and it shows exactly what the operating system would do, step by step, and how well it performed.
 
 ---
 
-## Team
+## What Problem Does It Solve?
 
-| # | Name | Student No. |
-|---|------|-------------|
-| 1 | Haydar Talha Ergün | 202303001099 |
-| 2 | Özgürcan Akgül | 202303001049 |
-| 3 | Mustafa Devran Karaca | 202303001018 |
-| 4 | Taha Akıncan | 202403001009 |
+An operating system has two difficult memory questions to answer all the time:
 
-**Group name:** RAMbo  
-**Repository:** https://github.com/htergun/RAMbo-MemoryManagementSystem
+1. **When RAM is full and a new page is needed, which page should be thrown out?**
+   A poor choice means the system keeps reloading pages from disk and slows down. This is the *page replacement* problem.
 
----
+2. **When a process needs memory, which free region should it be given?**
+   A poor choice wastes memory and leaves many small, unusable gaps. This is the *memory partitioning* problem.
 
-## Features
-
-### Page replacement algorithms
-Given a reference string and a frame count, each algorithm produces a step-by-step trace (page, frame state, fault / hit, victim page) and summary statistics (page faults, hits, hit ratio).
-
-| Algorithm | Victim selection rule |
-|-----------|-----------------------|
-| FIFO | The page that has been in memory the longest |
-| LRU | The page that has not been used for the longest time |
-| Optimal | The page that will not be used for the longest time in the future |
-
-### Memory partitioning algorithms
-Given a list of memory blocks and a list of processes, each algorithm places the processes and reports fragmentation.
-
-| Algorithm | Placement rule |
-|-----------|----------------|
-| First Fit | First block that is large enough |
-| Best Fit | Smallest block that is large enough |
-| Worst Fit | Largest block that is large enough |
-
-Two modes are supported (`PartitionMode`):
-
-- **Fixed:** a block holds at most one process. The unused part of the block is **internal fragmentation** (`block size − process size`).
-- **Variable:** a block is used only as much as the process needs; the remaining space stays available for other processes (internal fragmentation is 0).
-
-**External fragmentation** is the total free memory that remains unused while at least one process could not be placed.
+There is no single best answer; every algorithm trades simplicity against efficiency. RAMbo lets you run the classic algorithms on the same input and compare the results directly.
 
 ---
 
-## Architecture
+## What Can You Do With It?
 
-The project uses a layered structure (UI / Business Logic / Data Access):
+### Simulate page replacement
+Provide a sequence of page requests and a number of memory frames. RAMbo replays the sequence and reports, for every request, what is in memory, whether it was a **hit** or a **page fault**, and which page was evicted.
 
-```
-src/RAMbo.App/
-├── Program.cs                       # Entry point, DB connection check, demo/test output
-├── appsettings.json                 # Connection string ("RamboDb")
-├── Data/
-│   ├── RamboDbContext.cs            # Entity Framework Core DbContext
-│   └── SimulationRepository.cs      # Saves / reads simulation results (SQL)
-├── Models/
-│   ├── Simulation.cs, SimulationResult.cs, StepResult.cs, PageReference.cs
-│   └── MemoryBlock.cs, ProcessInfo.cs, Allocation.cs, PartitionResult.cs
-└── Services/
-    ├── SimulationRunner.cs          # Runs an algorithm and saves the result (used by the UI)
-    ├── Interfaces/
-    │   ├── IPageReplacementAlgorithm.cs
-    │   └── IPartitionAlgorithm.cs
-    └── Algorithms/
-        ├── FifoAlgorithm.cs, LruAlgorithm.cs, OptimalAlgorithm.cs
-        ├── PartitionAlgorithmBase.cs   # Shared placement + fragmentation logic
-        ├── PartitionMode.cs            # Fixed / Variable
-        └── FirstFit.cs, BestFit.cs, WorstFit.cs
-```
+| Algorithm | Idea |
+|-----------|------|
+| **FIFO** | Evict the page that arrived first |
+| **LRU** | Evict the page that has not been used for the longest time |
+| **Optimal** | Evict the page that will not be needed for the longest time (theoretical best, used as a benchmark) |
 
-Design notes:
+You get page fault count, hit count and hit ratio, and a comparison table of all three.
 
-- Every page replacement algorithm implements `IPageReplacementAlgorithm` (`Run(int[] referenceString, int frameCount)`).
-- Every partitioning algorithm implements `IPartitionAlgorithm` (`Run(List<MemoryBlock>, List<ProcessInfo>)`). First / Best / Worst Fit inherit from `PartitionAlgorithmBase` and only define how a block is selected.
-- `SimulationRunner` is the single entry point for the UI: `RunPageReplacement(...)` and `RunPartitioning(...)`.
+### Simulate memory allocation
+Provide a list of memory blocks and a list of processes with their sizes. RAMbo places the processes using:
 
-Database design and ER diagram: see `Mimari_ve_Veritabani.md`. The schema script is `Database/01_schema.sql`.
+| Algorithm | Idea |
+|-----------|------|
+| **First Fit** | Take the first block that is big enough |
+| **Best Fit** | Take the smallest block that is big enough |
+| **Worst Fit** | Take the largest block that is big enough |
+
+It supports both **fixed** partitioning (predefined blocks, one process per block) and **variable** partitioning (a block is used only as much as needed), and calculates how much memory is wasted:
+
+- **Internal fragmentation:** space wasted *inside* an allocated block
+- **External fragmentation:** free space that exists but cannot be used because no process fits
+
+### Keep a history of runs
+Simulation results are stored in a SQL Server database, so runs can be saved, reviewed and compared later.
 
 ---
 
-## Getting Started
+## Who Is It For?
 
-### Prerequisites
+- **Students** learning operating systems who want to see the textbook algorithms run on real input instead of working them out by hand
+- **Instructors** who need a quick way to demonstrate the difference between algorithms
+- **Anyone** who wants to experiment with how workload and memory size affect performance
 
-- [.NET SDK 8.0](https://dotnet.microsoft.com/download) or later
-- SQL Server (LocalDB, Express or full edition)
-- Git
-- Visual Studio 2022+ (optional, `dotnet` CLI is enough)
+---
 
-### 1. Clone the repository
+## A Quick Example
+
+Reference string `7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2` with 3 frames:
+
+| Algorithm | Page Faults | Hits |
+|-----------|:-----------:|:----:|
+| FIFO | 10 | 3 |
+| LRU | 9 | 4 |
+| Optimal | 7 | 6 |
+
+Optimal never does worse than the others. The gap between it and FIFO or LRU shows how much a real algorithm loses by not knowing the future.
+
+---
+
+## Running It
+
+**Requirements:** .NET SDK 8.0 or later, Microsoft SQL Server (LocalDB works), Git.
 
 ```bash
 git clone https://github.com/htergun/RAMbo-MemoryManagementSystem.git
 cd RAMbo-MemoryManagementSystem
 ```
 
-### 2. Create the database
-
-Run `Database/01_schema.sql` against your SQL Server instance (SSMS, Azure Data Studio, or Visual Studio's *SQL Server Object Explorer*). It creates the `RamboDb` database and its tables.
-
-### 3. Configure the connection string
-
-Edit `src/RAMbo.App/appsettings.json` and set the `RamboDb` connection string for your machine, for example:
-
-```json
-{
-  "ConnectionStrings": {
-    "RamboDb": "Server=(localdb)\\MSSQLLocalDB;Database=RamboDb;Trusted_Connection=True;TrustServerCertificate=True"
-  }
-}
-```
-
-### 4. Build
-
-```bash
-dotnet build
-```
-
-### 5. Run
+1. Run `Database/01_schema.sql` on your SQL Server instance to create the database.
+2. Set the `RamboDb` connection string in `src/RAMbo.App/appsettings.json`.
+3. Start the application:
 
 ```bash
 dotnet run --project src/RAMbo.App
 ```
 
-Or open the solution in Visual Studio and press **Ctrl+F5** (Start Without Debugging) so the console window stays open.
+---
 
-> If the database is unreachable, the program prints a connection warning and still runs the algorithm demos, because they do not depend on the database.
+## Built With
+
+C# and .NET 8, Entity Framework Core, Microsoft SQL Server.
+
+The code is organized in layers (data access, services, models). Every algorithm implements a small interface, so new algorithms can be added without touching the rest of the application.
 
 ---
 
-## Demo / Example Output
+## Team
 
-The demo in `Program.cs` uses the classic reference string `7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2` with 3 frames:
+**Group RAMbo**
 
-| Algorithm | Page Faults | Hits |
-|-----------|-------------|------|
-| FIFO | 10 | 3 |
-| LRU | 9 | 4 |
-| Optimal | 7 | 6 |
+| Name | Student No. |
+|------|-------------|
+| Haydar Talha Ergün | 202303001099 |
+| Özgürcan Akgül | 202303001049 |
+| Mustafa Devran Karaca | 202303001018 |
+| Taha Akıncan | 202403001009 |
 
-Partitioning demo — blocks `[100, 500, 200, 300, 600]`, processes `[212, 417, 112, 426]`:
-
-| Mode | Algorithm | Internal | External | Unplaced |
-|------|-----------|----------|----------|----------|
-| Fixed | First Fit | 559 | 400 | 1 |
-| Fixed | Best Fit | 433 | 0 | 0 |
-| Fixed | Worst Fit | 659 | 300 | 1 |
-| Variable | First Fit | 0 | 959 | 1 |
-| Variable | Best Fit | 0 | 0 | 0 |
-| Variable | Worst Fit | 0 | 959 | 1 |
-
-### Usage example (code)
-
-```csharp
-var runner = new SimulationRunner(repo);
-
-// Page replacement
-var refs = new[] { 7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2 };
-var result = runner.RunPageReplacement(new LruAlgorithm(), refs, frames: 3, save: false);
-Console.WriteLine($"{result.AlgorithmName}: {result.PageFaults} page faults");
-
-// Memory partitioning
-var partition = runner.RunPartitioning(
-    new BestFit { Mode = PartitionMode.Fixed }, blocks, processes);
-Console.WriteLine($"Internal: {partition.InternalFragmentation}, External: {partition.ExternalFragmentation}");
-```
-
----
-
-## Project Status
-
-| Week | Module | Status |
-|------|--------|--------|
-| 1 | Research & planning | Done |
-| 2 | Architecture & DB design | Done |
-| 3 | Project skeleton (.NET, folders, SQL connection) | Done |
-| 4 | FIFO algorithm | Done |
-| 5 | LRU algorithm | Done |
-| 6 | Optimal algorithm + comparison report | Done |
-| 7 | Memory partitioning (First / Best / Worst Fit, fragmentation) | Done |
-| 8 | SQL integration (CRUD, history queries) | Planned |
-| 9 | UI development (input screens, results display) | Planned |
-| 10 | Testing & debugging | Planned |
-| 11 | Documentation & presentation | Planned |
-
----
-
-## Task Distribution
-
-| Module | Owner |
-|--------|-------|
-| FIFO algorithm | Özgürcan Akgül |
-| LRU algorithm | Mustafa Devran Karaca |
-| Optimal algorithm + comparison report | Taha Akıncan |
-| Memory partitioning (First / Best / Worst Fit) | Haydar Talha Ergün |
-| SQL integration (Week 8) | Not yet |
-| UI (Week 9) | Not yet |
-
----
-
-## Tech Stack
-
-- **Language:** C# (.NET 8), console application
-- **Database:** Microsoft SQL Server
-- **Data access:** Entity Framework Core (SQL Server provider)
-- **Configuration:** `Microsoft.Extensions.Configuration` (`appsettings.json`)
-- **Version control:** Git / GitHub
-
----
-
-## Contributing / Workflow
-
-1. Run `git pull origin main` before you start working.
-2. Work on your own module's files only (see *Task Distribution*).
-3. Commit with a clear message, e.g. `Week 7: First/Best/Worst Fit and fragmentation`.
-4. `git pull origin main`, then `git push origin main`.
-
----
-
-## License
-
-Academic project for COME 361 – Operating Systems. Not intended for production use.
+*Developed for COME 361 – Operating Systems.*
