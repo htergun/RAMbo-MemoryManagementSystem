@@ -1,0 +1,50 @@
+<UserControl x:Class="RAMbo.App.Views.HistoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="900"
+             Background="#F8FAFC">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top Controls -->
+        <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,16"
+                BorderBrush="#E2E8F0" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Simulation History" 
+                               FontSize="15" FontWeight="SemiBold" Foreground="#1E293B"/>
+                    <TextBlock Text="Expand any record to view detailed execution steps and memory allocation." 
+                               FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                </StackPanel>
+
+                <Button x:Name="BtnRefresh" Grid.Column="1" Content="Refresh" 
+                        Style="{StaticResource PrimaryButton}" Height="34" Width="95" Click="BtnRefresh_Click"/>
+            </Grid>
+        </Border>
+
+        <!-- History Records View -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16"
+                BorderBrush="#E2E8F0" BorderThickness="1">
+            <Grid>
+                <TextBlock x:Name="TxtEmptyMessage" Text="No saved simulation records found." 
+                           FontSize="13" Foreground="#94A3B8" FontStyle="Italic" 
+                           HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="PnlHistoryList"/>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

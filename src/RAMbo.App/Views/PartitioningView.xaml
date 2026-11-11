@@ -1,0 +1,186 @@
+<UserControl x:Class="RAMbo.App.Views.PartitioningView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="750" d:DesignWidth="900"
+             Background="#F8FAFC">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Input & Configuration Card -->
+        <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,16"
+                BorderBrush="#E2E8F0" BorderThickness="1">
+            <StackPanel>
+                <TextBlock Text="Memory Partitioning Configuration" 
+                           FontSize="15" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,12"/>
+
+                <!-- Preset Selection -->
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Preset Scenario:" VerticalAlignment="Center" FontWeight="SemiBold" 
+                               Foreground="#475569" Margin="0,0,12,0"/>
+                    <ComboBox x:Name="CboPresets" Grid.Column="1" Height="34" VerticalContentAlignment="Center"
+                              SelectionChanged="CboPresets_SelectionChanged" Padding="8,4"/>
+                </Grid>
+
+                <!-- Blocks and Processes Inputs -->
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Blocks -->
+                    <Border Grid.Column="0" Background="#F8FAFC" CornerRadius="6" Padding="10" Margin="0,0,8,0"
+                            BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Memory Blocks (KB - Comma Separated):" FontWeight="SemiBold" 
+                                       Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBox x:Name="TxtBlocks" Height="34" VerticalContentAlignment="Center"
+                                     Padding="8,4" FontSize="13" Text="100, 500, 200, 300, 600"/>
+                            <TextBlock Text="e.g. 100, 500, 200, 300, 600" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Processes -->
+                    <Border Grid.Column="1" Background="#F8FAFC" CornerRadius="6" Padding="10" Margin="8,0,0,0"
+                            BorderBrush="#E2E8F0" BorderThickness="1">
+                        <StackPanel>
+                            <TextBlock Text="Process Sizes (KB - Comma Separated):" FontWeight="SemiBold" 
+                                       Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBox x:Name="TxtProcesses" Height="34" VerticalContentAlignment="Center"
+                                     Padding="8,4" FontSize="13" Text="212, 417, 112, 426"/>
+                            <TextBlock Text="e.g. 212, 417, 112, 426 (assigned as P1, P2...)" FontSize="11" Foreground="#94A3B8" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Mode, Algorithm & Action Buttons -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="150"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="Mode:" VerticalAlignment="Center" FontWeight="SemiBold" 
+                               Foreground="#475569" Margin="0,0,8,0"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                        <RadioButton x:Name="RbFixed" Content="Fixed" IsChecked="True" FontWeight="SemiBold" 
+                                     VerticalContentAlignment="Center" Margin="0,0,12,0"/>
+                        <RadioButton x:Name="RbVariable" Content="Variable" FontWeight="SemiBold" 
+                                     VerticalContentAlignment="Center"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Algorithm:" Grid.Column="2" VerticalAlignment="Center" FontWeight="SemiBold" 
+                               Foreground="#475569" Margin="0,0,8,0"/>
+                    <ComboBox x:Name="CboAlgorithm" Grid.Column="3" Height="34" VerticalContentAlignment="Center"
+                              Padding="8,4" SelectedIndex="0" Margin="0,0,16,0">
+                        <ComboBoxItem Content="First-Fit"/>
+                        <ComboBoxItem Content="Best-Fit"/>
+                        <ComboBoxItem Content="Worst-Fit"/>
+                    </ComboBox>
+
+                    <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button x:Name="BtnRun" Content="Run" Style="{StaticResource PrimaryButton}" 
+                                Padding="20,6" Height="34" Margin="0,0,8,0" Click="BtnRun_Click"/>
+                        <Button x:Name="BtnSave" Content="Save to DB" Style="{StaticResource SuccessButton}" 
+                                Padding="16,6" Height="34" Margin="0,0,8,0" Click="BtnSave_Click" IsEnabled="False"/>
+                        <Button x:Name="BtnExport" Content="Export" Style="{StaticResource SecondaryButton}" 
+                                Padding="16,6" Height="34" Click="BtnExport_Click" IsEnabled="False"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Results View -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16"
+                BorderBrush="#E2E8F0" BorderThickness="1">
+            <Grid x:Name="ResultsContainer" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Metric Cards -->
+                <UniformGrid Grid.Row="0" Columns="4" Margin="0,0,0,16">
+                    <Border Background="#F1F5F9" CornerRadius="6" Padding="12" Margin="0,0,8,0">
+                        <StackPanel>
+                            <TextBlock Text="Algorithm &amp; Mode" FontSize="11" FontWeight="SemiBold" Foreground="#64748B"/>
+                            <TextBlock x:Name="TxtResAlgoMod" Text="FirstFit (Fixed)" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="#FEF3C7" CornerRadius="6" Padding="12" Margin="4,0,4,0">
+                        <StackPanel>
+                            <TextBlock Text="Internal Fragmentation" FontSize="11" FontWeight="SemiBold" Foreground="#92400E"/>
+                            <TextBlock x:Name="TxtResIntFrag" Text="0 KB" FontSize="18" FontWeight="Bold" Foreground="#B45309" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="#FCE7F3" CornerRadius="6" Padding="12" Margin="4,0,4,0">
+                        <StackPanel>
+                            <TextBlock Text="External Fragmentation" FontSize="11" FontWeight="SemiBold" Foreground="#9D174D"/>
+                            <TextBlock x:Name="TxtResExtFrag" Text="0 KB" FontSize="18" FontWeight="Bold" Foreground="#BE185D" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="#FEE2E2" CornerRadius="6" Padding="12" Margin="8,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Unallocated Processes" FontSize="11" FontWeight="SemiBold" Foreground="#991B1B"/>
+                            <TextBlock x:Name="TxtResFailed" Text="0" FontSize="18" FontWeight="Bold" Foreground="#DC2626" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <!-- Allocation DataGrid -->
+                <DataGrid x:Name="GridAllocations" Grid.Row="1" AutoGenerateColumns="False" LoadingRow="GridAllocations_LoadingRow">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Process" Binding="{Binding ProcessName}" Width="100"/>
+                        <DataGridTextColumn Header="Process Size" Binding="{Binding ProcessSize}" Width="110"/>
+                        <DataGridTextColumn Header="Target Block" Binding="{Binding BlockName}" Width="120"/>
+                        <DataGridTextColumn Header="Block Size" Binding="{Binding BlockSize}" Width="110"/>
+                        <DataGridTextColumn Header="Internal Frag" Binding="{Binding InternalFragText}" Width="120"/>
+                        <DataGridTemplateColumn Header="Status" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#DCFCE7"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsAllocated}" Value="False">
+                                                        <Setter Property="Background" Value="#FEE2E2"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding StatusText}" FontWeight="SemiBold" FontSize="11">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#166534"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsAllocated}" Value="False">
+                                                            <Setter Property="Foreground" Value="#DC2626"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -34,7 +34,12 @@ public class SimulationRepository
         _db.Simulations.AsNoTracking().OrderByDescending(s => s.CreatedAt).ToList();
 
     public Simulation? GetById(int id) =>
-        _db.Simulations.Include(s => s.Results).Include(s => s.PageReferences)
+        _db.Simulations
+            .Include(s => s.Results)
+            .Include(s => s.PageReferences)
+            .Include(s => s.Processes)
+            .Include(s => s.MemoryBlocks)
+            .Include(s => s.Allocations)
             .FirstOrDefault(s => s.Id == id);
 
     public void Delete(int id)

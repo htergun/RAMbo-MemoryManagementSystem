@@ -7,7 +7,6 @@ namespace RAMbo.App.Services.Algorithms;
 /// Optimal (Belady) sayfa degistirme algoritmasi.
 /// Gelecekteki referans dizisine bakarak en uzun sure kullanilmayacak sayfayi cikarir.
 /// Bu, teorik minimum page fault sayisini uretir (referans deger olarak kullanilir).
-/// Hafta 6 - Haydar Talha Ergun
 /// </summary>
 public class OptimalAlgorithm : IPageReplacementAlgorithm
 {

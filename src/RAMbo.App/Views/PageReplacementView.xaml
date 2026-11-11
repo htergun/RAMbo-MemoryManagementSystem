@@ -1,0 +1,198 @@
+<UserControl x:Class="RAMbo.App.Views.PageReplacementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="750" d:DesignWidth="950"
+             Background="#F8FAFC">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <!-- Input & Configuration Card -->
+            <RowDefinition Height="Auto"/>
+            <!-- Comparative Results View -->
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Configuration Card -->
+        <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="16" Margin="0,0,0,16"
+                BorderBrush="#E2E8F0" BorderThickness="1">
+            <StackPanel>
+                <TextBlock Text="Page Replacement - Simultaneous Algorithm Comparison" 
+                           FontSize="15" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,12"/>
+
+                <!-- Preset Selection -->
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Preset Scenario:" VerticalAlignment="Center" FontWeight="SemiBold" 
+                               Foreground="#475569" Margin="0,0,12,0"/>
+                    <ComboBox x:Name="CboPresets" Grid.Column="1" Height="34" VerticalContentAlignment="Center"
+                              SelectionChanged="CboPresets_SelectionChanged" Padding="8,4"/>
+                </Grid>
+
+                <!-- Reference String & Frame Count -->
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="Reference String:" VerticalAlignment="Center" FontWeight="SemiBold" 
+                               Foreground="#475569" Margin="0,0,12,0"/>
+                    <TextBox x:Name="TxtReferences" Grid.Column="1" Height="34" VerticalContentAlignment="Center"
+                             Padding="8,4" FontSize="13" Margin="0,0,16,0"
+                             Text="7, 0, 1, 2, 0, 3, 0, 4, 2, 3, 0, 3, 2"/>
+
+                    <TextBlock Text="Frame Count:" Grid.Column="2" VerticalAlignment="Center" FontWeight="SemiBold" 
+                               Foreground="#475569" Margin="0,0,12,0"/>
+                    <TextBox x:Name="TxtFrameCount" Grid.Column="3" Height="34" VerticalContentAlignment="Center"
+                             Padding="8,4" FontSize="13" Text="3"/>
+                </Grid>
+
+                <!-- Execution Info & Actions -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Algorithms Evaluated:" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center"/>
+                        <Border Background="#EFF6FF" CornerRadius="4" Padding="6,2" Margin="8,0,4,0">
+                            <TextBlock Text="FIFO" FontSize="11" FontWeight="Bold" Foreground="#2563EB"/>
+                        </Border>
+                        <Border Background="#F5F3FF" CornerRadius="4" Padding="6,2" Margin="4,0,4,0">
+                            <TextBlock Text="LRU" FontSize="11" FontWeight="Bold" Foreground="#7C3AED"/>
+                        </Border>
+                        <Border Background="#ECFDF5" CornerRadius="4" Padding="6,2" Margin="4,0,0,0">
+                            <TextBlock Text="Optimal" FontSize="11" FontWeight="Bold" Foreground="#059669"/>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button x:Name="BtnRunAll" Content="Run" Style="{StaticResource PrimaryButton}" 
+                                Padding="20,6" Height="34" Margin="0,0,8,0" Click="BtnRunAll_Click"/>
+                        <Button x:Name="BtnSaveAll" Content="Save to DB" Style="{StaticResource SuccessButton}" 
+                                Padding="16,6" Height="34" Margin="0,0,8,0" Click="BtnSaveAll_Click" IsEnabled="False"/>
+                        <Button x:Name="BtnExport" Content="Export" Style="{StaticResource SecondaryButton}" 
+                                Padding="16,6" Height="34" Click="BtnExport_Click" IsEnabled="False"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Comparative Results Container -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16"
+                BorderBrush="#E2E8F0" BorderThickness="1">
+            <Grid x:Name="ResultsContainer" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <!-- Comparison Summary Table -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- Step-by-Step Title -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- Step-by-Step Comparative Grid -->
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- 1. Algorithm Performance Summary -->
+                <StackPanel Grid.Row="0" Margin="0,0,0,16">
+                    <TextBlock Text="Algorithm Benchmark Summary" FontSize="14" FontWeight="SemiBold" 
+                               Foreground="#1E293B" Margin="0,0,0,8"/>
+                    <DataGrid x:Name="GridSummary" AutoGenerateColumns="False" CanUserSortColumns="False"
+                              MaxHeight="150" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Algorithm" Binding="{Binding AlgorithmName}" Width="150" FontWeight="SemiBold"/>
+                            <DataGridTextColumn Header="Page Faults" Binding="{Binding PageFaults}" Width="110"/>
+                            <DataGridTextColumn Header="Hits" Binding="{Binding Hits}" Width="90"/>
+                            <DataGridTextColumn Header="Hit Ratio" Binding="{Binding HitRatioText}" Width="110"/>
+                            <DataGridTemplateColumn Header="Comparison Result" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#F1F5F9"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsBest}" Value="True">
+                                                            <Setter Property="Background" Value="#DCFCE7"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding BenchmarkNote}" FontSize="11" FontWeight="SemiBold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="#475569"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsBest}" Value="True">
+                                                                <Setter Property="Foreground" Value="#15803D"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+
+                <!-- 2. Step Title -->
+                <TextBlock Grid.Row="1" Text="Step-by-Step Comparative Trace" FontSize="14" FontWeight="SemiBold" 
+                           Foreground="#1E293B" Margin="0,0,0,8"/>
+
+                <!-- 3. Combined Comparative Trace DataGrid -->
+                <DataGrid x:Name="GridSteps" Grid.Row="2" AutoGenerateColumns="False" CanUserSortColumns="False"
+                          VerticalScrollBarVisibility="Auto">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Step" Binding="{Binding StepNumber}" Width="55"/>
+                        <DataGridTextColumn Header="Page" Binding="{Binding PageNumber}" Width="65" FontWeight="SemiBold"/>
+
+                        <!-- FIFO Column Group -->
+                        <DataGridTextColumn Header="FIFO Frames" Binding="{Binding FifoFrames}" Width="140"/>
+                        <DataGridTemplateColumn Header="FIFO Status" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding FifoStatusBg}" CornerRadius="3" Padding="5,1" HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding FifoStatus}" Foreground="{Binding FifoStatusFg}" FontWeight="SemiBold" FontSize="11"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- LRU Column Group -->
+                        <DataGridTextColumn Header="LRU Frames" Binding="{Binding LruFrames}" Width="140"/>
+                        <DataGridTemplateColumn Header="LRU Status" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding LruStatusBg}" CornerRadius="3" Padding="5,1" HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding LruStatus}" Foreground="{Binding LruStatusFg}" FontWeight="SemiBold" FontSize="11"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!-- Optimal Column Group -->
+                        <DataGridTextColumn Header="Optimal Frames" Binding="{Binding OptimalFrames}" Width="140"/>
+                        <DataGridTemplateColumn Header="Optimal Status" Width="105">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding OptimalStatusBg}" CornerRadius="3" Padding="5,1" HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding OptimalStatus}" Foreground="{Binding OptimalStatusFg}" FontWeight="SemiBold" FontSize="11"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
