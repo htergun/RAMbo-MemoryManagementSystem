@@ -122,7 +122,7 @@ foreach (var mode in new[] { PartitionMode.Fixed, PartitionMode.Variable })
 
     foreach (var pAlgo in partAlgos)
     {
-        var pr = runner.RunPartitioning(pAlgo, blocks, procs);
+        var pr = runner.RunPartitioningAndSave(pAlgo, blocks, procs, mode.ToString());
         int failed = pr.Allocations.Count(a => a.MemoryBlockId == null);
         Console.WriteLine($"{mode,-9} | {pr.AlgorithmName,-10} | {pr.InternalFragmentation,8} | {pr.ExternalFragmentation,8} | {failed,12}");
     }

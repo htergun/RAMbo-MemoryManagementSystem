@@ -22,4 +22,17 @@ public class SimulationRunner
     {
         return algo.Run(blocks, processes);
     }
+
+    public PartitionResult RunPartitioningAndSave(
+    IPartitionAlgorithm algo,
+    List<MemoryBlock> blocks,
+    List<ProcessInfo> processes,
+    string mode)
+    {
+        var result = RunPartitioning(algo, blocks, processes);
+
+        _repo.SavePartitioning(result, blocks, processes, mode);
+
+        return result;
+    }
 }

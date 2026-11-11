@@ -44,4 +44,92 @@ public class SimulationRepository
         _db.Simulations.Remove(s);
         _db.SaveChanges();
     }
+
+
+    public bool Update(int id, string newName)
+    {
+        var simulation = _db.Simulations.Find(id);
+
+        if (simulation == null)
+        {
+            return false;
+        }
+
+        simulation.Name = newName;
+        _db.SaveChanges();
+
+        return true;
+    }
+
+public int SavePartitioning(
+    PartitionResult result,
+    List<MemoryBlock> blocks,
+    List<ProcessInfo> processes,
+    string mode)
+{
+    if (result.Allocations.Count != processes.Count)
+        throw new InvalidOperationException("Allocation count does not match process count.");
+
+    if (blocks.Select(b => b.Id).Distinct().Count() != blocks.Count)
+        throw new InvalidOperationException("Memory block IDs must be unique.");
+
+    for (int i = 0; i < processes.Count; i++)
+    {
+        if (result.Allocations[i].ProcessId != processes[i].Id)
+            throw new InvalidOperationException("Allocation process order does not match.");
+    }
+
+    using var transaction = _db.Database.BeginTransaction();
+
+    var simulation = new Simulation
+    {
+        Name = $"{result.AlgorithmName} - {mode}",
+        SimulationType = "Partitioning",
+        AlgorithmName = result.AlgorithmName,
+        InternalFragmentation = result.InternalFragmentation,
+        ExternalFragmentation = result.ExternalFragmentation,
+        Processes = processes.Select(p => new ProcessInfo
+        {
+            Name = p.Name,
+            Size = p.Size
+        }).ToList(),
+        MemoryBlocks = blocks.Select(b => new MemoryBlock
+        {
+            BlockIndex = b.BlockIndex,
+            Size = b.Size
+        }).ToList()
+    };
+
+    _db.Simulations.Add(simulation);
+    _db.SaveChanges();
+
+    var blockMap = blocks
+        .Select((b, i) => new { b.Id, Index = i })
+        .ToDictionary(x => x.Id, x => simulation.MemoryBlocks[x.Index].Id);
+
+    var processMap = processes
+        .Select((p, i) => new { p.Id, Index = i })
+        .ToDictionary(x => x.Id, x => simulation.Processes[x.Index].Id);
+
+    for (int i = 0; i < result.Allocations.Count; i++)
+    {
+        var allocation = result.Allocations[i];
+
+        _db.Allocations.Add(new Allocation
+        {
+            SimulationId = simulation.Id,
+            ProcessId = processMap[allocation.ProcessId],
+            MemoryBlockId = allocation.MemoryBlockId.HasValue
+                ? blockMap[allocation.MemoryBlockId.Value]
+                : null,
+            InternalFragmentation = allocation.InternalFragmentation
+        });
+    }
+
+    _db.SaveChanges();
+    transaction.Commit();
+
+    return simulation.Id;
+}
+
 }
