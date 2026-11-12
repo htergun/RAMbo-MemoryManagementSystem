@@ -31,25 +31,51 @@ public partial class App : Application
                 .AddJsonFile("appsettings.json", optional: true)
                 .Build();
 
-            var connectionString = config.GetConnectionString("RamboDb");
+            var configConn = config.GetConnectionString("RamboDb");
 
-            if (!string.IsNullOrWhiteSpace(connectionString))
+            // Denenecek olası SQL Server sunucu adresleri
+            var candidateConnections = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(configConn))
             {
-                var options = new DbContextOptionsBuilder<RamboDbContext>()
-                    .UseSqlServer(connectionString)
-                    .Options;
+                candidateConnections.Add(configConn);
+            }
 
-                var db = new RamboDbContext(options);
-                repo = new SimulationRepository(db);
+            candidateConnections.Add("Server=(localdb)\\MSSQLLocalDB;Database=RamboMemoryDb;Trusted_Connection=True;TrustServerCertificate=True;");
+            candidateConnections.Add("Server=localhost;Database=RamboMemoryDb;Trusted_Connection=True;TrustServerCertificate=True;");
+            candidateConnections.Add("Server=.\\SQLEXPRESS;Database=RamboMemoryDb;Trusted_Connection=True;TrustServerCertificate=True;");
+
+            foreach (var connStr in candidateConnections)
+            {
+                try
+                {
+                    var options = new DbContextOptionsBuilder<RamboDbContext>()
+                        .UseSqlServer(connStr, sqlOptions => sqlOptions.CommandTimeout(5))
+                        .Options;
+
+                    var db = new RamboDbContext(options);
+
+                    // Veritabanı ve tablolar yoksa otomatik olarak oluşturur!
+                    db.Database.EnsureCreated();
+
+                    if (db.Database.CanConnect())
+                    {
+                        repo = new SimulationRepository(db);
+                        break; // Başarılı bağlantı sağlandı
+                    }
+                }
+                catch
+                {
+                    // Sıradaki sunucu adayını dene
+                }
             }
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"DB Initialization note: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"DB Auto-Setup Note: {ex.Message}");
         }
 
         var runner = new SimulationRunner(repo);
-
         var mainWindow = new MainWindow(runner, repo);
         Current.MainWindow = mainWindow;
         mainWindow.Show();
