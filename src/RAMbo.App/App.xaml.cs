@@ -10,8 +10,20 @@ namespace RAMbo.App;
 
 public partial class App : Application
 {
+    public App()
+    {
+        DispatcherUnhandledException += (s, e) =>
+        {
+            MessageBox.Show($"Application Error:\n{e.Exception.Message}\n\nStack:\n{e.Exception.StackTrace}", 
+                "Application Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            e.Handled = true;
+        };
+    }
+
     private void Application_Startup(object sender, StartupEventArgs e)
     {
+        SimulationRepository? repo = null;
+
         try
         {
             var config = new ConfigurationBuilder()
@@ -19,24 +31,27 @@ public partial class App : Application
                 .AddJsonFile("appsettings.json", optional: true)
                 .Build();
 
-            var connectionString = config.GetConnectionString("RamboDb") 
-                ?? "Server=localhost;Database=RamboMemoryDb;Trusted_Connection=True;TrustServerCertificate=True;";
+            var connectionString = config.GetConnectionString("RamboDb");
 
-            var options = new DbContextOptionsBuilder<RamboDbContext>()
-                .UseSqlServer(connectionString)
-                .Options;
+            if (!string.IsNullOrWhiteSpace(connectionString))
+            {
+                var options = new DbContextOptionsBuilder<RamboDbContext>()
+                    .UseSqlServer(connectionString)
+                    .Options;
 
-            var db = new RamboDbContext(options);
-            var repo = new SimulationRepository(db);
-            var runner = new SimulationRunner(repo);
-
-            var mainWindow = new MainWindow(runner, repo);
-            mainWindow.Show();
+                var db = new RamboDbContext(options);
+                repo = new SimulationRepository(db);
+            }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Application startup failed:\n{ex.Message}", "Startup Error", 
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            System.Diagnostics.Debug.WriteLine($"DB Initialization note: {ex.Message}");
         }
+
+        var runner = new SimulationRunner(repo);
+
+        var mainWindow = new MainWindow(runner, repo);
+        Current.MainWindow = mainWindow;
+        mainWindow.Show();
     }
 }
